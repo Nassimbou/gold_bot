@@ -12,8 +12,8 @@ intents = discord.Intents.default()
 intents.members = True
 
 # Fixation des prix
-MUTE_PRICE = 2000
-TEMPMUTE_PRICE = 200
+MUTE_PRICE = 100000
+TEMPMUTE_PRICE = 5000
 
 load_dotenv()
 
@@ -47,7 +47,7 @@ async def on_voice_state_update(member, before, after):
             Users[member] = [datetime.now(),0]
     # Si l'utilisateur quitte un channel vocal, on met à jour et on enregistre sa value d'or dans la bdd
     if before.channel is not None and after.channel is None:
-        Users[member][1] += int(((datetime.now() - Users[member][0]).total_seconds()) / 60)
+        Users[member][1] += int(((datetime.now() - Users[member][0]).total_seconds()) )
         db = pickledb.load('user.db', False)
         db.set(str(member.id), str(Users[member][1]))
         db.dump()
@@ -59,17 +59,17 @@ async def balance(ctx):
         # Et si il es bien dans un channel vocal (sinon la value est null)
         if ctx.author.voice.channel is not None:
             # On met à jour la value dans le contexte
-            Users[ctx.author][1] += int(((datetime.now() - Users[ctx.author][0]).total_seconds()) / 60)
+            Users[ctx.author][1] += int(((datetime.now() - Users[ctx.author][0]).total_seconds()) )
             Users[ctx.author][0] = datetime.now()
             db = pickledb.load('user.db', False)
             db.set(str(ctx.author.id), str(Users[ctx.author][1]))
             db.dump()
-    await ctx.send(f'Vous avez {Users[ctx.author][1]} or')
+    await ctx.send(f'Vous avez {Users[ctx.author][1]} Orneau')
 
 @commands.command(pass_context=True)
 async def mute(ctx, member: discord.Member=None):
     if Users[ctx.author][1] < MUTE_PRICE:
-        await ctx.send('Vous n\'avez pas assez d\'or')
+        await ctx.send('Vous n\'avez pas assez d\'Orneau')
     else:
         Users[ctx.author][1] = Users[ctx.author][1] - MUTE_PRICE
         await member.edit(mute=True)
@@ -82,9 +82,9 @@ async def mute_error(ctx, error):
 @commands.command(pass_context=True)
 async def tempmute(ctx, duration:int, member: discord.Member=None):
     if Users[ctx.author][1] < TEMPMUTE_PRICE:
-        await ctx.send('Vous n\'avez pas assez d\'or')
-    elif duration > 600:
-        await ctx.send('Vous ne pouvez pas mute plus de 10 minutes')
+        await ctx.send('Vous n\'avez pas assez d\'Orneau')
+    elif duration > 60:
+        await ctx.send('Vous ne pouvez pas mute plus de 1 minutes')
     else:
         Users[ctx.author][1] = Users[ctx.author][1] - TEMPMUTE_PRICE
         await member.edit(mute=True)
@@ -96,7 +96,16 @@ async def tempmute_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         await ctx.send('Je n\'ai pas trouvé cet utilisateur')
 
+@commands.command(pass_context=True)
+async def add(ctx, montant:int, member: discord.Member=None):
+    Users[member][1] += montant
+
+@commands.command(pass_context=True)
+async def add(ctx, montant:int, member: discord.Member=None):
+    Users[member][1] += montant
+
 bot.add_command(mute)
 bot.add_command(tempmute)
 bot.add_command(balance)
+bot.add_command(add)
 bot.run(os.getenv('TOKEN'))
