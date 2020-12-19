@@ -4,8 +4,10 @@ import os
 from dotenv import load_dotenv
 from discord.ext import commands
 from datetime import datetime
+import asyncio
 
-MUTE_PRICE = 2000
+MUTE_PRICE = 20
+TEMPMUTE_PRICE = 2
 
 load_dotenv()
 
@@ -46,6 +48,28 @@ async def mute_error(ctx, error):
     if isinstance(error, commands.BadArgument):
         await ctx.send('Je n\'ai pas trouvé cet utilisateur')
 
+@commands.command(pass_context=True)
+async def tempmute(ctx, duration:int, member: discord.Member=None):
+    if Users[member][1] < TEMPMUTE_PRICE:
+        await ctx.send('Vous n\'avez pas assez d\'or')
+    else:
+        Users[member][1] = Users[member][1] - MUTE_PRICE
+        await member.edit(mute=True)
+        await asyncio.sleep(duration)
+        await member.edit(mute=False)
+
+@mute.error
+async def tempmute_error(ctx, error):
+    if isinstance(error, commands.BadArgument):
+        await ctx.send('Je n\'ai pas trouvé cet utilisateur')
+
+#@bot.command()
+#async def ban(ctx, member:discord.Member, duration: int):
+#    await ctx.guild.ban(member)
+#    await asyncio.sleep(duration)
+#    await ctx.guild.unban(member)
+
 bot.add_command(mute)
+bot.add_command(tempmute)
 bot.add_command(balance)
 bot.run(os.getenv('TOKEN'))
