@@ -11,8 +11,8 @@ from discord.utils import get
 intents = discord.Intents.default()
 intents.members = True
 
-MUTE_PRICE = 20
-TEMPMUTE_PRICE = 2
+MUTE_PRICE = 2000
+TEMPMUTE_PRICE = 200
 
 load_dotenv()
 
@@ -25,7 +25,7 @@ async def on_ready():
     db = pickledb.load('user.db', False)
     for member in bot.users:
         if db.get(str(member.id)):
-            Users[member] = [datetime.now(), float(db.get(str(member.id)))]
+            Users[member] = [datetime.now(), int(float(db.get(str(member.id))))]
     db.dump()
 
 @bot.event
@@ -33,15 +33,10 @@ async def on_voice_state_update(member, before, after):
     if before.channel is None and after.channel is not None:  
         if member in Users:
             Users[member][0] = datetime.now()
-        else if db.get(str(member.id):
-            db = pickledb.load('user.db', False)
-            Users[member] = [datetime.now(), float(db.get(str(member.id)))]
-            db.dump()
         else:
             Users[member] = [datetime.now(),0]
-
     if before.channel is not None and after.channel is None:
-        Users[member][1] += (datetime.now() - Users[member][0]).total_seconds() 
+        Users[member][1] += int(((datetime.now() - Users[member][0]).total_seconds()) / 60)
         db = pickledb.load('user.db', False)
         db.set(str(member.id), str(Users[member][1]))
         b=db.get(str(member.id))
@@ -51,7 +46,7 @@ async def on_voice_state_update(member, before, after):
 async def balance(ctx):
     if ctx.author.voice is not None:
         if ctx.author.voice.channel is not None:
-            Users[ctx.author][1] += (datetime.now() - Users[ctx.author][0]).total_seconds()
+            Users[ctx.author][1] += int(((datetime.now() - Users[ctx.author][0]).total_seconds()) / 60)
             Users[ctx.author][0] = datetime.now()
     await ctx.send(f'Vous avez {Users[ctx.author][1]} or')
 
@@ -72,6 +67,8 @@ async def mute_error(ctx, error):
 async def tempmute(ctx, duration:int, member: discord.Member=None):
     if Users[ctx.author][1] < TEMPMUTE_PRICE:
         await ctx.send('Vous n\'avez pas assez d\'or')
+    elif duration > 600:
+        await ctx.send('Vous ne pouvez pas mute plus de 10 minutes')
     else:
         Users[ctx.author][1] = Users[ctx.author][1] - TEMPMUTE_PRICE
         await member.edit(mute=True)
