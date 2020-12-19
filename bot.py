@@ -5,11 +5,13 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from datetime import datetime
 import asyncio
+import pickledb
 
 MUTE_PRICE = 20
 TEMPMUTE_PRICE = 2
 
 load_dotenv()
+db = pickledb.load('user.db', False)
 
 bot = commands.Bot(command_prefix='$')
 Users = {}
