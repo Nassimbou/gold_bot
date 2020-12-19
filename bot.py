@@ -50,7 +50,6 @@ async def on_voice_state_update(member, before, after):
         Users[member][1] += int(((datetime.now() - Users[member][0]).total_seconds()) / 60)
         db = pickledb.load('user.db', False)
         db.set(str(member.id), str(Users[member][1]))
-        b=db.get(str(member.id))
         db.dump()
 
 @commands.command(pass_context=True)
@@ -59,9 +58,12 @@ async def balance(ctx):
     if ctx.author.voice is not None:
         # Et si il es bien dans un channel vocal (sinon la value est null)
         if ctx.author.voice.channel is not None:
-            # On met à jour la value dans le contexte actuelle
+            # On met à jour la value dans le contexte
             Users[ctx.author][1] += int(((datetime.now() - Users[ctx.author][0]).total_seconds()) / 60)
             Users[ctx.author][0] = datetime.now()
+            db = pickledb.load('user.db', False)
+            db.set(str(ctx.author.id), str(Users[ctx.author][1]))
+            db.dump()
     await ctx.send(f'Vous avez {Users[ctx.author][1]} or')
 
 @commands.command(pass_context=True)
